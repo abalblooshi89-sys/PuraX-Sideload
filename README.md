@@ -51,6 +51,12 @@ no other installer, so there is no truly DroiTong-free path without root.
   mismatch. Use it with any mirror, and always with APKPure, which has shipped
   tampered APKs.
 - `repack.sh` is the lower-level rename/re-sign step; `./repack.sh -h` lists options.
+- apktool's built-in Android framework trails new Android releases, so an app
+  built against a newer SDK (Chrome, for one) can have manifest attributes it
+  can't rebuild. `repack.sh` then retries against the newest platform in the
+  Android SDK (`$ANDROID_HOME`, default `~/Library/Android/sdk`), and removes
+  any attribute still unknown, printing its name. Keep the newest platform
+  installed (`sdkmanager "platforms;android-<N>"`) so nothing gets removed.
 
 ## Tips
 
@@ -76,4 +82,5 @@ no other installer, so there is no truly DroiTong-free path without root.
 
 `hdc` (OpenHarmony SDK, `~/Library/OpenHarmony/sdk/toolchains`), Homebrew
 `openjdk`, `apktool` and `apkeep`, plus `tools/uber-apk-signer-1.3.0.jar` and
-`tools/APKEditor-1.4.9.jar`.
+`tools/APKEditor-1.4.9.jar`. Optional: an Android SDK platform newer than
+apktool's framework (see above).

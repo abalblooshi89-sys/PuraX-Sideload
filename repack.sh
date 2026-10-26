@@ -17,6 +17,7 @@ SIGNER="$HERE/tools/uber-apk-signer-1.3.0.jar"
 HDC="${HDC:-$HOME/Library/OpenHarmony/sdk/toolchains/hdc}"
 KS="$HERE/keys/sideload.jks"
 KS_PROPS="$HERE/keys/sideload.properties"
+SDK="${ANDROID_HOME:-$HOME/Library/Android/sdk}"
 PHONE_DIR="/storage/media/100/local/files/Docs/Download"
 
 suffix="px"; new_pkg=""; label=""; push=0; no_rename=0; apk=""
@@ -49,20 +50,51 @@ pass="$(sed -n 's/^storePassword=//p' "$KS_PROPS")"
 work="$(mktemp -d "${TMPDIR:-/tmp}/repack.XXXXXX")"
 trap 'rm -rf "$work"' EXIT
 
+# Decode the APK into $1 (extra apktool options follow); apktool's log goes to $1.log.
+decode() {
+  local out="$1"; shift
+  apktool d -f -s "$@" -o "$out" "$apk" >/dev/null 2>"$out.log" || { cat "$out.log" >&2; exit 1; }
+}
+# Android attributes apktool couldn't resolve while decoding into $1, one per line.
+unresolved() {
+  sed -n 's/.*Unresolved attr reference: ns=[^,]*, name=\([A-Za-z0-9_]*\),.*/\1/p' "$1.log" | sort -u
+}
+
 if [ "$no_rename" = 1 ]; then
   cp "$apk" "$work/unsigned.apk"
   tag="resigned"
 else
   echo "==> Decoding $(basename "$apk")"
-  apktool d -f -s -o "$work/dec" "$apk" >/dev/null
+  decode "$work/dec"
+  missing="$(unresolved "$work/dec")"
+
+  # apktool's bundled Android framework lags new Android releases, and an app
+  # built against a newer SDK uses attributes it can't rebuild. Retry against
+  # the newest Android SDK platform; whatever is still unknown gets removed
+  # from the manifest (patch_manifest.py says which).
+  fw_args=()
+  jar="$(ls "$SDK"/platforms/android-*/android.jar 2>/dev/null | sort -V | tail -1 || true)"
+  if [ -n "$missing" ] && [ -n "$jar" ]; then
+    apktool if -p "$work/fw" "$jar" >/dev/null 2>&1
+    decode "$work/dec.sdk" -p "$work/fw"
+    if [ "$(unresolved "$work/dec.sdk" | grep -c .)" -lt "$(echo "$missing" | grep -c .)" ]; then
+      echo "==> Using the Android framework from $(basename "$(dirname "$jar")")"
+      rm -rf "$work/dec" && mv "$work/dec.sdk" "$work/dec" && mv "$work/dec.sdk.log" "$work/dec.log"
+      missing="$(unresolved "$work/dec")"
+      fw_args=(-p "$work/fw")
+    fi
+  fi
+  drop_args=()
+  for attr in $missing; do drop_args+=(--drop-attr "$attr"); done
 
   old_pkg="$(sed -n 's/.*<manifest[^>]* package="\([^"]*\)".*/\1/p' "$work/dec/AndroidManifest.xml" | head -1)"
   [ -n "$new_pkg" ] || new_pkg="$old_pkg.$suffix"
   echo "==> Renaming $old_pkg -> $new_pkg"
-  python3 -I "$HERE/tools/patch_manifest.py" "$work/dec" "$new_pkg" "$label" >/dev/null
+  python3 -I "$HERE/tools/patch_manifest.py" "$work/dec" "$new_pkg" "$label" \
+    ${drop_args[@]+"${drop_args[@]}"} >/dev/null
 
   echo "==> Rebuilding"
-  apktool b -o "$work/unsigned.apk" "$work/dec" >/dev/null
+  apktool b ${fw_args[@]+"${fw_args[@]}"} -o "$work/unsigned.apk" "$work/dec" >/dev/null
   tag="$new_pkg"
 fi
 
