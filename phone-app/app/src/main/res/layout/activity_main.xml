@@ -84,6 +84,18 @@
             android:visibility="gone" />
 
         <Button
+            android:id="@+id/openEa"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="Open in EasyAbroad"
+            android:textAllCaps="false"
+            android:textColor="@color/accent"
+            android:textStyle="bold"
+            android:visibility="gone" />
+
+        <Button
             android:id="@+id/choose"
             style="?android:attr/borderlessButtonStyle"
             android:layout_width="wrap_content"

@@ -48,7 +48,7 @@ public class MainActivity extends Activity {
     private ImageView icon;
     private Switch rename;
     private EditText newPkg;
-    private Button go, open;
+    private Button go, open, openEa;
 
     // Current selection.
     private File baseApk;      // the APK to install, or the base of a bundle
@@ -79,12 +79,14 @@ public class MainActivity extends Activity {
         newPkg = findViewById(R.id.newPkg);
         go = findViewById(R.id.go);
         open = findViewById(R.id.open);
+        openEa = findViewById(R.id.openEa);
 
         findViewById(R.id.choose).setOnClickListener(v -> pick(REQ_PICK_APK));
         findViewById(R.id.importKey).setOnClickListener(v -> pick(REQ_PICK_KEY));
         rename.setOnCheckedChangeListener((b, on) -> newPkg.setEnabled(on));
         go.setOnClickListener(v -> repackAndInstall());
         open.setOnClickListener(v -> openInstalled());
+        openEa.setOnClickListener(v -> openEasyAbroad());
 
         IntentFilter f = new IntentFilter(Installer.ACTION_RESULT);
         if (Build.VERSION.SDK_INT >= 33) {
@@ -168,6 +170,7 @@ public class MainActivity extends Activity {
         clearLog();
         open.setVisibility(View.GONE);
         warn.setVisibility(View.GONE);
+        openEa.setVisibility(View.GONE);
         String name = displayName(uri);
         appName.setText(name != null ? name : "Loading…");
         appDetails.setText("Reading file…");
@@ -220,6 +223,7 @@ public class MainActivity extends Activity {
                     if (note != null) {
                         warn.setText(note);
                         warn.setVisibility(View.VISIBLE);
+                        openEa.setVisibility(View.VISIBLE);
                     }
                     boolean alreadyRenamed = oldPkg.endsWith(".px");
                     rename.setChecked(!alreadyRenamed);
@@ -350,6 +354,26 @@ public class MainActivity extends Activity {
         Intent launch = getPackageManager().getLaunchIntentForPackage(installedPkg);
         if (launch != null) startActivity(launch);
         else appendLog("Couldn't find a launcher screen for " + installedPkg);
+    }
+
+    /**
+     * Opens EasyAbroad, where these apps install with their real signature.
+     * EasyAbroad is a HarmonyOS app; the container forwards its deep link to it.
+     * Falls back to the app-market link, then to a hint if neither resolves.
+     */
+    private void openEasyAbroad() {
+        String[] uris = {"abroad://com.easy.hmos.abroad/open", "market://details?id=" + oldPkg};
+        for (String u : uris) {
+            try {
+                Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(u))
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(i);
+                return;
+            } catch (Exception ignored) {
+            }
+        }
+        appendLog("Couldn't open EasyAbroad from here. Open it from the home screen "
+                + "and search for the app.");
     }
 
     // ---- Signing key ---------------------------------------------------------
