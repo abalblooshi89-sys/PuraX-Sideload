@@ -12,7 +12,9 @@ import java.util.Set;
  * isn't mistaken for the problem.
  *
  * Confirmed on this device: renamed WhatsApp installs, opens to its own Welcome
- * screen, then closes the instant "Agree and continue" starts registration.
+ * screen, then closes the instant "Agree and continue" starts registration,
+ * while the official build from EasyAbroad (original package and signature)
+ * registers normally. So point these apps at EasyAbroad instead.
  */
 final class KnownApps {
 
@@ -43,19 +45,17 @@ final class KnownApps {
         String name = (label == null || label.length() == 0) ? "This app" : label.toString();
         String base = name + " checks its own signature when you register or sign in. "
                 + "Repacking re-signs it, so it installs and opens but closes the moment you "
-                + "try to sign in. Renaming or re-signing can't get past that check.";
-        String bare = stripSuffix(pkg);
-        if ("com.whatsapp".equals(bare) || "com.whatsapp.w4b".equals(bare)) {
-            base += " Use web.whatsapp.com in a browser, or link it as a companion device "
-                    + "from WhatsApp on another phone.";
-        }
+                + "try to sign in. Renaming or re-signing can't get past that check. "
+                + "Install the official version from EasyAbroad instead: it keeps the "
+                + "original signature, so sign-in works.";
         return "⚠ " + base;
     }
 
     /** One-line reminder after such an app installs, since it will look fine until login. */
     static String installedHint(String pkg) {
         return isSignatureLocked(pkg)
-                ? "Note: it opens, but will close at sign-in — it verifies its own signature."
+                ? "Note: it opens, but will close at sign-in — it verifies its own signature. "
+                        + "Get it from EasyAbroad instead."
                 : null;
     }
 
