@@ -2,3 +2,8 @@ out/
 downloads/
 keys/
 __pycache__/
+phone-app/.gradle/
+phone-app/build/
+phone-app/app/build/
+phone-app/local.properties
+logs/

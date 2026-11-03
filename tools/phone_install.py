@@ -58,7 +58,7 @@ def nodes():
 
 def find(ns, text=None, id_=None):
     for t, i, c in ns:
-        if (text and re.fullmatch(text, t, re.I)) or (id_ and i == id_):
+        if (text and re.fullmatch(text, t, re.I)) or (id_ and re.fullmatch(id_, i)):
             return c
     return None
 
@@ -83,7 +83,8 @@ def main():
     shell("aa force-stop " + FILES)
     shell("aa start -b %s -a MainAbility" % FILES)
     time.sleep(2)
-    if not wait_tap(id_="search_button"):
+    # Recent tab: search_button; Browse tab: hds_search_menu.
+    if not wait_tap(id_="search_button|hds_search_menu"):
         sys.exit("Files search button not found")
     time.sleep(1)
     shell("uitest uiInput text '%s'" % name.replace("'", ""))

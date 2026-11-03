@@ -1,0 +1,40 @@
+plugins {
+    id "com.android.application"
+}
+
+android {
+    namespace "com.bulletuae.pxinstaller"
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "com.bulletuae.pxinstaller"
+        minSdk 26
+        targetSdk 35
+        versionCode 3
+        versionName "1.2"
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+
+    packaging {
+        resources {
+            excludes += ["META-INF/LICENSE*", "META-INF/NOTICE*"]
+        }
+    }
+}
+
+dependencies {
+    // ARSCLib (APKEditor's engine) with its android.* stub classes removed,
+    // since the real framework classes are on the device.
+    implementation files("libs/arsclib-1.3.5-nostubs.jar")
+    implementation "com.android.tools.build:apksig:9.4.1"
+}

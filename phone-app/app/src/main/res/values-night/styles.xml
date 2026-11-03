@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="AppTheme" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:colorAccent">#6E9BFF</item>
+        <item name="android:colorPrimary">#6E9BFF</item>
+        <item name="android:statusBarColor">#0F1115</item>
+        <item name="android:windowBackground">@color/bg</item>
+    </style>
+    <color name="bg">#0F1115</color>
+    <color name="card">#1A1D24</color>
+    <color name="text">#ECEEF3</color>
+    <color name="muted">#9AA3B2</color>
+    <color name="accent">#6E9BFF</color>
+    <color name="ok">#4CC38A</color>
+    <color name="err">#FF6B5E</color>
+</resources>
